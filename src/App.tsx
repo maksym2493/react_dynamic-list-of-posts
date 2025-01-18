@@ -59,6 +59,13 @@ export const App = () => {
     [selectedPost],
   );
 
+  const isUserSelected = selectUser !== null;
+
+  const showError = isUserSelected && hasError;
+  const showLoader = isUserSelected && isLoading;
+
+  const showContent = !showError && !showLoader;
+
   return (
     <main className="section">
       <div className="container">
@@ -74,17 +81,21 @@ export const App = () => {
               </div>
 
               <div className="block" data-cy="MainContent">
-                {selectedUser ? (
-                  isLoading ? (
-                    <Loader />
-                  ) : hasError ? (
-                    <div
-                      className="notification is-danger"
-                      data-cy="PostsLoadingError"
-                    >
-                      Something went wrong!
-                    </div>
-                  ) : posts.length === 0 ? (
+                {!selectedUser && (
+                  <p data-cy="NoSelectedUser">No user selected</p>
+                )}
+                {showLoader && <Loader />}
+                {showError && (
+                  <div
+                    className="notification is-danger"
+                    data-cy="PostsLoadingError"
+                  >
+                    Something went wrong!
+                  </div>
+                )}
+
+                {showContent &&
+                  (posts.length === 0 ? (
                     <div
                       className="notification is-warning"
                       data-cy="NoPostsYet"
@@ -97,10 +108,7 @@ export const App = () => {
                       selectedPost={selectedPost}
                       onSelect={selectPost}
                     />
-                  )
-                ) : (
-                  <p data-cy="NoSelectedUser">No user selected</p>
-                )}
+                  ))}
               </div>
             </div>
           </div>

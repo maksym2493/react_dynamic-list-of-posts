@@ -67,6 +67,7 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
     (comment: Comment) => {
       const { id } = comment;
 
+      setHasError2(false);
       setHidden(prevValue => [...prevValue, id]);
 
       commentApi
@@ -96,6 +97,8 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
 
       let before: Comment[] = [];
 
+      setHasError2(false);
+
       setComments(prevComments => {
         before = prevComments;
 
@@ -120,6 +123,14 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
     [post.id],
   );
 
+  const isContentVisible = !isLoading && !hasError;
+  const showError = hasError || (isContentVisible && hasError2);
+
+  const showEmptyMessage =
+    isContentVisible && comments.length - hidden.length === 0;
+
+  const showComments = isContentVisible && !showEmptyMessage;
+
   return (
     <div className="content" data-cy="PostDetails">
       <div className="content" data-cy="PostDetails">
@@ -131,83 +142,74 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
           <p data-cy="PostBody">{post.body}</p>
         </div>
 
-        {isLoading && <Loader />}
+        <div className="block">
+          {isLoading && <Loader />}
 
-        {!isLoading && (
-          <div className="block">
-            {hasError ? (
-              <div className="notification is-danger" data-cy="CommentsError">
-                Something went wrong
-              </div>
-            ) : (
-              <>
-                {hasError2 && (
-                  <div
-                    className="notification is-danger"
-                    data-cy="CommentsError"
-                  >
-                    Something went wrong
-                  </div>
-                )}
+          {showError && (
+            <div className="notification is-danger" data-cy="CommentsError">
+              Something went wrong
+            </div>
+          )}
 
-                {comments.length - hidden.length === 0 ? (
-                  <p className="title is-4" data-cy="NoCommentsMessage">
-                    No comments yet
-                  </p>
-                ) : (
-                  <>
-                    <p className="title is-4">Comments:</p>
+          {showEmptyMessage && (
+            <p className="title is-4" data-cy="NoCommentsMessage">
+              No comments yet
+            </p>
+          )}
 
-                    {comments.map(
-                      comment =>
-                        !hidden.includes(comment.id) && (
-                          <article
-                            key={comment.id}
-                            className="message is-small"
-                            data-cy="Comment"
-                          >
-                            <div className="message-header">
-                              <a
-                                href={`mailto:${comment.email}`}
-                                data-cy="CommentAuthor"
-                              >
-                                {comment.name}
-                              </a>
-                              <button
-                                data-cy="CommentDelete"
-                                type="button"
-                                className="delete is-small"
-                                aria-label="delete"
-                                onClick={() => deleteComment(comment)}
-                              >
-                                delete button
-                              </button>
-                            </div>
-                            <div className="message-body" data-cy="CommentBody">
-                              {comment.body}
-                            </div>
-                          </article>
-                        ),
-                    )}
-                  </>
-                )}
+          {showComments && (
+            <>
+              <p className="title is-4">Comments:</p>
 
-                {!isFormVisible && !hasError && (
-                  <button
-                    data-cy="WriteCommentButton"
-                    type="button"
-                    className="button is-link"
-                    onClick={() => setIsFormVisible(true)}
-                  >
-                    Write a comment
-                  </button>
-                )}
-              </>
-            )}
-          </div>
+              {comments.map(
+                comment =>
+                  !hidden.includes(comment.id) && (
+                    <article
+                      key={comment.id}
+                      className="message is-small"
+                      data-cy="Comment"
+                    >
+                      <div className="message-header">
+                        <a
+                          href={`mailto:${comment.email}`}
+                          data-cy="CommentAuthor"
+                        >
+                          {comment.name}
+                        </a>
+                        <button
+                          data-cy="CommentDelete"
+                          type="button"
+                          className="delete is-small"
+                          aria-label="delete"
+                          onClick={() => deleteComment(comment)}
+                        >
+                          delete button
+                        </button>
+                      </div>
+                      <div className="message-body" data-cy="CommentBody">
+                        {comment.body}
+                      </div>
+                    </article>
+                  ),
+              )}
+            </>
+          )}
+
+          {isContentVisible && !isFormVisible && (
+            <button
+              data-cy="WriteCommentButton"
+              type="button"
+              className="button is-link"
+              onClick={() => setIsFormVisible(true)}
+            >
+              Write a comment
+            </button>
+          )}
+        </div>
+
+        {isContentVisible && isFormVisible && (
+          <NewCommentForm onSubmit={createComment} />
         )}
-
-        {isFormVisible && <NewCommentForm onSubmit={createComment} />}
       </div>
     </div>
   );
