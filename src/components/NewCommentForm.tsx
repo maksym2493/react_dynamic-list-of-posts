@@ -88,7 +88,7 @@ export const NewCommentForm: React.FC<Props> = ({ onSubmit }) => {
         body: trimmedBody,
       })
         .then(() => handleReset())
-        .catch()
+        .catch(() => {})
         .finally(() => setIsLoading(false));
     },
     [body, email, handleReset, name, onSubmit],

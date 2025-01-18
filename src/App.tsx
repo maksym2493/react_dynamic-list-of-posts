@@ -27,7 +27,9 @@ export const App = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    getUsers().then(setUsers).catch();
+    getUsers()
+      .then(setUsers)
+      .catch(() => {});
   }, []);
 
   const selectUser = useCallback(

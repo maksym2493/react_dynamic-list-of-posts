@@ -30,6 +30,9 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
 
     let aborted = false;
 
+    // if all is goood aborted === false, what we need in the end of loading.
+    // And !aborted = true, what we need to set an Error.
+    // if aborted === true => setIsLoading(true), setHasError(false) -> We moved to another post or choose another user.
     commentApi
       .getComments(post.id, signal)
       .then(setComments)

@@ -46,7 +46,8 @@ export const UserSelector: React.FC<Props> = ({
     } else {
       removeListeners();
     }
-  }, [addListeners, isActive, removeListeners]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive]);
 
   const selectUser = useCallback(
     (user: User) => {
