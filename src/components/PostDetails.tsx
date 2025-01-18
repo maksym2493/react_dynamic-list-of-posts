@@ -16,14 +16,19 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
   const [comments, setComments] = useState<Comment[]>([]);
 
   const [hasError, setHasError] = useState(false);
+  const [hasError2, setHasError2] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [isFormVisible, setIsFormVisible] = useState(false);
 
   useEffect(() => {
+    setHidden([]);
     setComments([]);
-    setIsLoading(true);
+    setHasError(false);
+    setHasError2(false);
     setIsFormVisible(false);
+
+    setIsLoading(true);
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -67,14 +72,17 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
       commentApi
         .deleteComment(id)
         .then(() => {
+          setHasError2(false);
           setHidden(prevValue => remove<number>(prevValue, id));
           setComments(prevComments => remove<Comment>(prevComments, comment));
         })
-        .catch(() =>
+        .catch(() => {
+          setHasError2(true);
+
           setHidden(prevValue =>
             prevValue.filter(commentId => commentId !== id),
-          ),
-        );
+          );
+        });
     },
     [remove],
   );
@@ -94,13 +102,20 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
         return prevComments;
       });
 
-      const sentComment = await commentApi.createComment(comment);
+      try {
+        const sentComment = await commentApi.createComment(comment);
 
-      setComments(prevComments => {
-        return before === prevComments
-          ? [...prevComments, sentComment]
-          : prevComments;
-      });
+        setComments(prevComments => {
+          return before === prevComments
+            ? [...prevComments, sentComment]
+            : prevComments;
+        });
+
+        setHasError2(false);
+      } catch (e) {
+        setHasError2(true);
+        throw e;
+      }
     },
     [post.id],
   );
@@ -124,57 +139,70 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
               <div className="notification is-danger" data-cy="CommentsError">
                 Something went wrong
               </div>
-            ) : comments.length - hidden.length === 0 ? (
-              <p className="title is-4" data-cy="NoCommentsMessage">
-                No comments yet
-              </p>
             ) : (
-              <p className="title is-4">Comments:</p>
-            )}
-
-            {comments.map(
-              comment =>
-                !hidden.includes(comment.id) && (
-                  <article
-                    key={comment.id}
-                    className="message is-small"
-                    data-cy="Comment"
+              <>
+                {hasError2 && (
+                  <div
+                    className="notification is-danger"
+                    data-cy="CommentsError"
                   >
-                    <div className="message-header">
-                      <a
-                        href={`mailto:${comment.email}`}
-                        data-cy="CommentAuthor"
-                      >
-                        {comment.name}
-                      </a>
+                    Something went wrong
+                  </div>
+                )}
 
-                      <button
-                        data-cy="CommentDelete"
-                        type="button"
-                        className="delete is-small"
-                        aria-label="delete"
-                        onClick={() => deleteComment(comment)}
-                      >
-                        delete button
-                      </button>
-                    </div>
+                {comments.length - hidden.length === 0 ? (
+                  <p className="title is-4" data-cy="NoCommentsMessage">
+                    No comments yet
+                  </p>
+                ) : (
+                  <>
+                    <p className="title is-4">Comments:</p>
 
-                    <div className="message-body" data-cy="CommentBody">
-                      {comment.body}
-                    </div>
-                  </article>
-                ),
-            )}
+                    {comments.map(
+                      comment =>
+                        !hidden.includes(comment.id) && (
+                          <article
+                            key={comment.id}
+                            className="message is-small"
+                            data-cy="Comment"
+                          >
+                            <div className="message-header">
+                              <a
+                                href={`mailto:${comment.email}`}
+                                data-cy="CommentAuthor"
+                              >
+                                {comment.name}
+                              </a>
+                              <button
+                                data-cy="CommentDelete"
+                                type="button"
+                                className="delete is-small"
+                                aria-label="delete"
+                                onClick={() => deleteComment(comment)}
+                              >
+                                delete button
+                              </button>
+                            </div>
+                            <div className="message-body" data-cy="CommentBody">
+                              {comment.body}
+                            </div>
+                          </article>
+                        ),
+                    )}
+                  </>
+                )}
 
-            {!isFormVisible && !hasError && (
-              <button
-                data-cy="WriteCommentButton"
-                type="button"
-                className="button is-link"
-                onClick={() => setIsFormVisible(true)}
-              >
-                Write a comment
-              </button>
+                {!isFormVisible && !hasError && (
+                  <button
+                    data-cy="WriteCommentButton"
+                    type="button"
+                    className="button is-link"
+                    onClick={() => setIsFormVisible(true)}
+                  >
+                    Write a comment
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}
